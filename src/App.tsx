@@ -1,31 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Papa, { ParseResult } from 'papaparse';
+import React, { useEffect, useState } from 'react';
 import initSqlJs, { Database, QueryExecResult } from 'sql.js';
+import CsvUploader from './CsvUploader';
 
 import './App.css';
 
 function App() {
-  const fileInput = useRef<HTMLInputElement>(null);
-  const [result, setResult] = useState<ParseResult<string[]>>();
-
-  const onUpload = useCallback((event) => {
-    event.preventDefault();
-    const reader = new FileReader();
-    const file = fileInput.current?.files?.[0];
-    if (!file) return;
-    reader.onload = (event) =>
-      typeof event.target?.result === 'string' &&
-      Papa.parse<string[]>(file, {
-        complete: (results) => setResult(results),
-      });
-    reader.readAsText(file);
-  }, []);
-
   const [db, setDb] = useState<Database>();
   const [error, setError] = useState(null);
   const [results, setResults] = useState<QueryExecResult[]>([]);
 
-  function exec(sql: string) {
+  function execStatement(sql: string) {
     try {
       setResults(db?.exec(sql) ?? []);
       setError(null);
@@ -43,57 +27,60 @@ function App() {
         });
         setDb(new SQL.Database());
       } catch (err) {
-        console.log(err);
         setError(err);
       }
     })();
   }, []);
 
+  const handleOnCsvUpload = (name: string, data: string[][]) => {
+    const [header, ...rest] = data;
+    const columnList = `(${header
+      .map((col) => `${col.toLowerCase()} TEXT`)
+      .join(', ')})`;
+    const createTableStatement = `CREATE TABLE ${name} ${columnList};`;
+
+    const insertValuesStatement = `INSERT INTO ${name} VALUES ${rest
+      .map((row) => `(${row.map((value) => JSON.stringify(value)).join(', ')})`)
+      .join(',')};`;
+
+    execStatement(createTableStatement);
+    execStatement(insertValuesStatement);
+  };
+
   return (
     <div className="App">
-      <input ref={fileInput} type="file" accept=".csv" onChange={onUpload} />
-      <div>
-        {result?.data.map((row) => (
-          <p>{row.join(', ')}</p>
-        ))}
-      </div>
+      <CsvUploader onSubmit={handleOnCsvUpload} />
       <h1>React SQL interpreter</h1>
 
       <textarea
-        onChange={(e) => exec(e.target.value)}
+        onChange={(e) => execStatement(e.target.value)}
         placeholder="Enter some SQL. No inspiration ? Try “select sqlite_version()”"
-      ></textarea>
+      />
 
       <pre className="error">{(error || '').toString()}</pre>
 
       <pre>
-        {
-          // results contains one object per select statement in the query
-          results.map(({ columns, values }, i) => (
-            <table>
-              <thead>
-                <tr>
-                  {columns.map((columnName, i) => (
-                    <td key={i}>{columnName}</td>
+        {results.map(({ columns, values }) => (
+          <table>
+            <thead>
+              <tr>
+                {columns.map((columnName, i) => (
+                  <td key={i}>{columnName}</td>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {values.map((row, i) => (
+                <tr key={i}>
+                  {row.map((value, ri) => (
+                    <td key={ri}>{value}</td>
                   ))}
                 </tr>
-              </thead>
-
-              <tbody>
-                {
-                  // values is an array of arrays representing the results of the query
-                  values.map((row, i) => (
-                    <tr key={i}>
-                      {row.map((value, i) => (
-                        <td key={i}>{value}</td>
-                      ))}
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          ))
-        }
+              ))}
+            </tbody>
+          </table>
+        ))}
       </pre>
     </div>
   );
