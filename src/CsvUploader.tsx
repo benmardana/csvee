@@ -4,7 +4,7 @@ import Papa, { ParseResult } from 'papaparse';
 import useDB from './DBContext';
 
 const CsvUploader = () => {
-  const { executeQuery } = useDB();
+  const { saveTable } = useDB();
   const fileInput = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ParseResult<string[]>>();
   const [csvName, setCsvName] = useState<string>('');
@@ -26,22 +26,9 @@ const CsvUploader = () => {
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!csvName || !result) return;
-      const [header, ...rest] = result.data;
-      const columnList = `(${header
-        .map((col) => `${col.toLowerCase()} TEXT`)
-        .join(', ')})`;
-      const createTableStatement = `CREATE TABLE ${csvName} ${columnList};`;
-
-      const insertValuesStatement = `INSERT INTO ${csvName} VALUES ${rest
-        .map(
-          (row) => `(${row.map((value) => JSON.stringify(value)).join(', ')})`
-        )
-        .join(',')};`;
-
-      executeQuery?.(createTableStatement);
-      executeQuery?.(insertValuesStatement);
+      saveTable?.(csvName, result.data);
     },
-    [csvName, executeQuery, result]
+    [csvName, saveTable, result]
   );
 
   return (

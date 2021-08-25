@@ -1,18 +1,14 @@
 import React from 'react';
-
+import ReactDOM from 'react-dom';
+import './index.css';
+import Root from './Root';
 import { DBContextProvider } from './DBContext';
-import CsvUploader from './CsvUploader';
-import SQLEditor from './SQLEditor';
 
-import './App.css';
-
-const App = () => (
-  <DBContextProvider>
-    <div className="App">
-      <CsvUploader />
-      <SQLEditor />
-    </div>
-  </DBContextProvider>
+ReactDOM.render(
+  <React.StrictMode>
+    <DBContextProvider>
+      <Root />
+    </DBContextProvider>
+  </React.StrictMode>,
+  document.getElementById('app')
 );
-
-export default App;

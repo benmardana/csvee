@@ -13,6 +13,8 @@ interface DBContextInterface {
   executeQuery?: (sql: string) => void;
   queryError?: string;
   queryResult?: QueryExecResult[];
+  saveTable?: (name: string, values: string[][]) => void;
+  tables?: string[];
 }
 
 const DBContext = createContext<DBContextInterface>({});
@@ -27,6 +29,7 @@ export const DBContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [db, setDb] = useState<Database>();
+  const [tables, setTables] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -58,14 +61,52 @@ export const DBContextProvider = ({
     [db]
   );
 
+  const saveTable = useCallback(
+    (name: string, values: string[][]) => {
+      const [header, ...rest] = values;
+      const columnList = `(${header
+        .map((col) => `${col.toLowerCase()} TEXT`)
+        .join(', ')})`;
+      const createTableStatement = `CREATE TABLE ${name} ${columnList};`;
+
+      const insertValuesStatements = rest
+        .filter((row) => row.length === header.length)
+        .map(
+          (row) =>
+            `INSERT INTO ${name} VALUES (${row
+              .map((value) => JSON.stringify(value))
+              .join(', ')});`
+        );
+
+      let index = 0;
+      try {
+        db?.exec?.(createTableStatement);
+        setTables([...tables, name].sort());
+        for (index; index < insertValuesStatements.length; index += 1) {
+          db?.exec?.(insertValuesStatements[index]);
+        }
+      } catch (err) {
+        setQueryError(
+          `${err.message}, row: ${index + 2}, statement: ${
+            insertValuesStatements[index]
+          }`
+        );
+        setQueryResult([]);
+      }
+    },
+    [db, tables]
+  );
+
   const dbContextValue = useMemo(
     () => ({
       db,
       executeQuery,
       queryError,
       queryResult,
+      tables,
+      saveTable,
     }),
-    [db, executeQuery, queryError, queryResult]
+    [db, executeQuery, queryError, queryResult, saveTable, tables]
   );
 
   return (
