@@ -14,8 +14,8 @@ npm install
 npm run dev
 ```
 
-## Build
+## Deploy
 
 ```bash
-npm run build
+npm run build && npm run serve
 ```

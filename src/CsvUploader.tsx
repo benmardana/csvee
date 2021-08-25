@@ -1,11 +1,10 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Papa, { ParseResult } from 'papaparse';
 
-interface CsvUploaderInterface {
-  onSubmit: (name: string, data: string[][]) => void;
-}
+import useDB from './DBContext';
 
-const CsvUploader = ({ onSubmit }: CsvUploaderInterface) => {
+const CsvUploader = () => {
+  const { executeQuery } = useDB();
   const fileInput = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ParseResult<string[]>>();
   const [csvName, setCsvName] = useState<string>('');
@@ -26,9 +25,23 @@ const CsvUploader = ({ onSubmit }: CsvUploaderInterface) => {
   const handleOnSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      csvName && result && onSubmit(csvName, result.data);
+      if (!csvName || !result) return;
+      const [header, ...rest] = result.data;
+      const columnList = `(${header
+        .map((col) => `${col.toLowerCase()} TEXT`)
+        .join(', ')})`;
+      const createTableStatement = `CREATE TABLE ${csvName} ${columnList};`;
+
+      const insertValuesStatement = `INSERT INTO ${csvName} VALUES ${rest
+        .map(
+          (row) => `(${row.map((value) => JSON.stringify(value)).join(', ')})`
+        )
+        .join(',')};`;
+
+      executeQuery?.(createTableStatement);
+      executeQuery?.(insertValuesStatement);
     },
-    [csvName, onSubmit, result]
+    [csvName, executeQuery, result]
   );
 
   return (
