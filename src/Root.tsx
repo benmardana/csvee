@@ -1,11 +1,11 @@
 import React from 'react';
 import Split from 'react-split';
 
-import './root.css';
+import './assets/root.css';
 
-import CsvUploader from './CsvUploader';
-import SQLEditor from './SQLEditor';
-import useDB from './DBContext';
+import CsvUploader from './components/CsvUploader';
+import SQLEditor from './components/SQLEditor';
+import useDB from './components/DBContext';
 
 const Root = () => {
   const { tables, queryResult } = useDB();

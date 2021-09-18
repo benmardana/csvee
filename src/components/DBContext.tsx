@@ -7,7 +7,7 @@ import React, {
   useContext,
 } from 'react';
 import initSqlJs, { Database, QueryExecResult } from 'sql.js';
-import sqlWasm from './sql-wasm.wasm';
+import sqlWasm from '../assets/sql-wasm.wasm';
 
 interface DBContextInterface {
   db?: Database;

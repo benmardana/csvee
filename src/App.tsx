@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import './assets/index.css';
 import Root from './Root';
-import { DBContextProvider } from './DBContext';
+import { DBContextProvider } from './components/DBContext';
 
 ReactDOM.render(
   <React.StrictMode>
