@@ -6,8 +6,6 @@ import './root.css';
 import CsvUploader from './CsvUploader';
 import SQLEditor from './SQLEditor';
 import useDB from './DBContext';
-// {/* <CsvUploader />
-// <SQLEditor /> */}
 
 const Root = () => {
   const { tables, queryResult } = useDB();

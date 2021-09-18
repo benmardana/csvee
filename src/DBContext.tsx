@@ -7,6 +7,7 @@ import React, {
   useContext,
 } from 'react';
 import initSqlJs, { Database, QueryExecResult } from 'sql.js';
+import sqlWasm from './sql-wasm.wasm';
 
 interface DBContextInterface {
   db?: Database;
@@ -35,7 +36,7 @@ export const DBContextProvider = ({
     (async () => {
       try {
         const SQL = await initSqlJs({
-          locateFile: (file) => `https://sql.js.org/dist/${file}`,
+          locateFile: () => sqlWasm,
         });
         setDb(new SQL.Database());
       } catch (err) {
