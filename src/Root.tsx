@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button, Classes } from '@blueprintjs/core';
 
 import NavBar from './components/NavBar';
+import SQLEditor from './components/SQLEditor';
+import Tables from './components/Tables';
 import TablesDrawer from './components/TablesDrawer';
 
 import './assets/root.css';
@@ -19,6 +21,8 @@ const Root = () => {
           text="Tables"
         />
       </NavBar>
+      <SQLEditor />
+      <Tables />
       <TablesDrawer
         isOpen={showTablesDrawer}
         onClose={() => setShowTablesDrawer(false)}
