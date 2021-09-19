@@ -35,10 +35,10 @@ export const DBContextProvider = ({
   useEffect(() => {
     (async () => {
       try {
-        const SQL = await initSqlJs({
+        const SqlJs = await initSqlJs({
           locateFile: () => sqlWasm,
         });
-        setDb(new SQL.Database());
+        setDb(new SqlJs.Database());
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);

@@ -10,10 +10,10 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@blueprintjs/core": "^4.0.0-alpha.0",
     "papaparse": "^5.3.1",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "react-split": "^2.0.12",
     "sql.js": "^1.6.1"
   },
   "devDependencies": {

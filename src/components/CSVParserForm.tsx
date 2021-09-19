@@ -1,34 +1,42 @@
 import React, { useCallback, useRef, useState } from 'react';
-import Papa, { ParseResult } from 'papaparse';
+import { ParseResult, parse } from 'papaparse';
 
-import useDB from './DBContext';
+const reader = new FileReader();
 
-const CsvUploader = () => {
-  const { saveTable } = useDB();
+const CSVParserForm = ({
+  onParse,
+}: {
+  onParse?: (name: string, values: string[][]) => void;
+}) => {
   const fileInput = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ParseResult<string[]>>();
   const [csvName, setCsvName] = useState<string>('');
 
-  const handleOnFileChange = useCallback((event) => {
-    event.preventDefault();
-    const reader = new FileReader();
+  const handleOnFileChange = useCallback(() => {
     const file = fileInput.current?.files?.[0];
+
+    // TODO: handle file not uploaded
     if (!file) return;
-    reader.onload = (onloadEvent) =>
-      typeof onloadEvent.target?.result === 'string' &&
-      Papa.parse<string[]>(file, {
+
+    reader.onload = ({ target }) =>
+      typeof target?.result === 'string' &&
+      parse<string[]>(file, {
         complete: (results) => setResult(results),
       });
+
     reader.readAsText(file);
   }, []);
 
   const handleOnSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+
+      // TODO: handle invalid form with errors
       if (!csvName || !result) return;
-      saveTable?.(csvName, result.data);
+
+      onParse?.(csvName, result.data);
     },
-    [csvName, saveTable, result]
+    [csvName, result, onParse]
   );
 
   return (
@@ -49,4 +57,4 @@ const CsvUploader = () => {
   );
 };
 
-export default CsvUploader;
+export default CSVParserForm;
