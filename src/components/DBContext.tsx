@@ -6,8 +6,8 @@ import React, {
   useMemo,
   useContext,
 } from 'react';
+import { entries, set } from 'idb-keyval';
 import initSqlJs, { Database, QueryExecResult } from 'sql.js';
-import sqlWasm from '../assets/sql-wasm.wasm';
 
 interface DBContextInterface {
   db?: Database;
@@ -15,7 +15,7 @@ interface DBContextInterface {
   queryError?: string;
   queryResult?: QueryExecResult[];
   saveTable?: (name: string, values: string[][]) => void;
-  tables?: string[];
+  tableNames?: string[];
 }
 
 const DBContext = createContext<DBContextInterface>({});
@@ -24,21 +24,59 @@ const useDB = () => useContext(DBContext);
 
 export default useDB;
 
+const saveTableToDB = async (db: any, name: string, values: string[][]) => {
+  const [header, ...rest] = values;
+  const columnList = `(${header
+    .map((col) => `${col.toLowerCase().replaceAll(' ', '_')} TEXT`)
+    .join(', ')})`;
+
+  const createTableStatement = `CREATE TABLE ${name} ${columnList};`;
+
+  const insertValuesStatements = rest
+    .filter((row) => row.length === header.length)
+    .map(
+      (row) =>
+        `INSERT INTO ${name} VALUES (${row
+          .map((value) => JSON.stringify(value))
+          .join(',')})`
+    );
+
+  let index = 0;
+  try {
+    db?.exec?.(createTableStatement);
+    for (index; index < insertValuesStatements.length; index += 1) {
+      db?.exec?.(insertValuesStatements[index]);
+    }
+  } catch (error) {
+    throw new Error(
+      `${error.message}, row: ${index + 1}, statement: ${
+        insertValuesStatements[index]
+      } ${error.stack}`
+    );
+  }
+};
+
 export const DBContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
   const [db, setDb] = useState<Database>();
-  const [tables, setTables] = useState<string[]>([]);
+  const [tableNames, setTableNames] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
         const SqlJs = await initSqlJs({
-          locateFile: () => sqlWasm,
+          locateFile: (fileName) => `/${fileName}`,
         });
-        setDb(new SqlJs.Database());
+        const newDB = new SqlJs.Database();
+        setDb(newDB);
+        const maybeEntries = await entries<string, string[][]>();
+        maybeEntries.forEach(([name, values]) => {
+          saveTableToDB(newDB, name, values);
+          setTableNames((prev) => [...prev, name].sort());
+        });
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
@@ -47,12 +85,13 @@ export const DBContextProvider = ({
   }, []);
 
   const [queryError, setQueryError] = useState<any>();
-  const [queryResult, setQueryResult] = useState<QueryExecResult[]>([]);
+  const [queryResult, setQueryResult] = useState<QueryExecResult[]>();
 
   const executeQuery = useCallback(
     (sql: string) => {
       try {
-        setQueryResult(db?.exec(sql) ?? []);
+        const result = db?.exec(sql);
+        setQueryResult(result);
         setQueryError(undefined);
       } catch (err) {
         setQueryError(err);
@@ -63,39 +102,19 @@ export const DBContextProvider = ({
   );
 
   const saveTable = useCallback(
-    (name: string, values: string[][]) => {
-      const [header, ...rest] = values;
-      const columnList = `(${header
-        .map((col) => `${col.toLowerCase()} TEXT`)
-        .join(', ')})`;
-      const createTableStatement = `CREATE TABLE ${name} ${columnList};`;
-
-      const insertValuesStatements = rest
-        .filter((row) => row.length === header.length)
-        .map(
-          (row) =>
-            `INSERT INTO ${name} VALUES (${row
-              .map((value) => JSON.stringify(value))
-              .join(', ')});`
-        );
-
-      let index = 0;
+    async (name: string, values: string[][]) => {
       try {
-        db?.exec?.(createTableStatement);
-        setTables([...tables, name].sort());
-        for (index; index < insertValuesStatements.length; index += 1) {
-          db?.exec?.(insertValuesStatements[index]);
-        }
+        saveTableToDB(db, name, values);
       } catch (err) {
-        setQueryError(
-          `${err.message}, row: ${index + 2}, statement: ${
-            insertValuesStatements[index]
-          }`
-        );
+        console.log(err.message);
+        setQueryError(err.message);
         setQueryResult([]);
       }
+
+      setTableNames((prev) => [...prev, name].sort());
+      await set(name, values);
     },
-    [db, tables]
+    [db]
   );
 
   const dbContextValue = useMemo(
@@ -104,10 +123,10 @@ export const DBContextProvider = ({
       executeQuery,
       queryError,
       queryResult,
-      tables,
+      tableNames,
       saveTable,
     }),
-    [db, executeQuery, queryError, queryResult, saveTable, tables]
+    [db, executeQuery, queryError, queryResult, saveTable, tableNames]
   );
 
   return (

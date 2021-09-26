@@ -10,7 +10,7 @@ const TablesDrawer = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const { tables } = useDB();
+  const { tableNames } = useDB();
   const [showAddNewTable, setShowAddNewTable] = useState(false);
 
   return (
@@ -21,11 +21,11 @@ const TablesDrawer = ({
         title="Tables"
         onClose={onClose}
       >
-        {tables?.length ? (
+        {tableNames?.length ? (
           <>
             <UL>
-              {tables.map((table) => (
-                <li>{table}</li>
+              {tableNames.map((table, index) => (
+                <li key={index}>{table}</li>
               ))}
             </UL>
             <Button

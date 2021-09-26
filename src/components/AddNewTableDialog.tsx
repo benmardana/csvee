@@ -18,7 +18,7 @@ const AddNewTableDialog = ({
   onClose: () => void;
 }) => {
   const { saveTable } = useDB();
-  const [result, setResult] = useState<ParseResult<string[]>>();
+  const [result, setResult] = useState<ParseResult<string[]>['data']>();
   const [csvName, setCsvName] = useState<string>('');
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -29,7 +29,7 @@ const AddNewTableDialog = ({
     if (!file) return;
 
     parse<string[]>(file, {
-      complete: (results) => setResult(results),
+      complete: (results) => setResult(results.data),
     });
   }, []);
 
@@ -40,9 +40,11 @@ const AddNewTableDialog = ({
       // TODO: handle invalid form with errors
       if (csvName.length < 1 || !result) return;
 
-      saveTable?.(csvName, result.data);
+      saveTable?.(csvName, result);
+
+      onClose();
     },
-    [csvName, result, saveTable]
+    [csvName, onClose, result, saveTable]
   );
 
   return (
