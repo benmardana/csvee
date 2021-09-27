@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Classes } from '@blueprintjs/core';
+import { ThList } from '@blueprintjs/icons';
 
 import NavBar from './components/NavBar';
 import SQLEditor from './components/SQLEditor';
@@ -17,7 +18,7 @@ const Root = () => {
         <Button
           onClick={() => setShowTablesDrawer(true)}
           className={Classes.MINIMAL}
-          icon="th-list"
+          icon={<ThList />}
           text="Tables"
         />
       </NavBar>

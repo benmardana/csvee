@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Cell, Column, Table } from '@blueprintjs/table';
-import '@blueprintjs/table/lib/css/table.css';
 import useDB from './DBContext';
 
 const Tables = () => {
