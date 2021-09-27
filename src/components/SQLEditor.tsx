@@ -7,6 +7,7 @@ const SQLEditor = () => {
   const { executeQuery } = useDB();
   const [query, setQuery] = useState('');
 
+  const handleExecuteQuery = () => executeQuery?.(query);
   return (
     <div style={{ position: 'relative', minWidth: '100%', height: '30%' }}>
       <TextArea
@@ -18,7 +19,7 @@ const SQLEditor = () => {
         large
       />
       <Button
-        onClick={() => executeQuery?.(query)}
+        onClick={handleExecuteQuery}
         style={{ position: 'absolute', bottom: 0, right: 0 }}
         outlined
       >

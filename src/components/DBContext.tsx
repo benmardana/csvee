@@ -6,16 +6,18 @@ import React, {
   useMemo,
   useContext,
 } from 'react';
+import { Intent } from '@blueprintjs/core';
 import { entries, set } from 'idb-keyval';
 import initSqlJs, { Database, QueryExecResult } from 'sql.js';
+
+import toaster from '../utils/toaster';
 
 interface DBContextInterface {
   db?: Database;
   executeQuery?: (sql: string) => void;
-  queryError?: string;
   queryResult?: QueryExecResult[];
   saveTable?: (name: string, values: string[][]) => void;
-  tableNames?: string[];
+  tableNames?: { name: string; columns: string[] }[];
 }
 
 const DBContext = createContext<DBContextInterface>({});
@@ -62,7 +64,9 @@ export const DBContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [db, setDb] = useState<Database>();
-  const [tableNames, setTableNames] = useState<string[]>([]);
+  const [tableNames, setTableNames] = useState<
+    { name: string; columns: string[] }[]
+  >([]);
 
   useEffect(() => {
     (async () => {
@@ -75,16 +79,25 @@ export const DBContextProvider = ({
         const maybeEntries = await entries<string, string[][]>();
         maybeEntries.forEach(([name, values]) => {
           saveTableToDB(newDB, name, values);
-          setTableNames((prev) => [...prev, name].sort());
+          setTableNames((prev) =>
+            [
+              ...prev,
+              {
+                name,
+                columns: values[0].map((val) =>
+                  val.toLowerCase().replaceAll(' ', '_')
+                ),
+              },
+            ].sort()
+          );
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(err);
+        toaster.showToast({ message: err.message, intent: Intent.DANGER });
       }
     })();
   }, []);
 
-  const [queryError, setQueryError] = useState<any>();
   const [queryResult, setQueryResult] = useState<QueryExecResult[]>();
 
   const executeQuery = useCallback(
@@ -92,9 +105,9 @@ export const DBContextProvider = ({
       try {
         const result = db?.exec(sql);
         setQueryResult(result);
-        setQueryError(undefined);
       } catch (err) {
-        setQueryError(err);
+        console.log(err);
+        toaster.showToast({ message: err.message, intent: Intent.DANGER });
         setQueryResult([]);
       }
     },
@@ -107,11 +120,21 @@ export const DBContextProvider = ({
         saveTableToDB(db, name, values);
       } catch (err) {
         console.log(err.message);
-        setQueryError(err.message);
+        toaster.showToast({ message: err.message, intent: Intent.DANGER });
         setQueryResult([]);
       }
 
-      setTableNames((prev) => [...prev, name].sort());
+      setTableNames((prev) =>
+        [
+          ...prev,
+          {
+            name,
+            columns: values[0].map((val) =>
+              val.toLowerCase().replaceAll(' ', '_')
+            ),
+          },
+        ].sort()
+      );
       await set(name, values);
     },
     [db]
@@ -121,12 +144,11 @@ export const DBContextProvider = ({
     () => ({
       db,
       executeQuery,
-      queryError,
       queryResult,
       tableNames,
       saveTable,
     }),
-    [db, executeQuery, queryError, queryResult, saveTable, tableNames]
+    [db, executeQuery, queryResult, saveTable, tableNames]
   );
 
   return (

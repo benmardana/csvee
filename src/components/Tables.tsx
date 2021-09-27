@@ -3,7 +3,7 @@ import { Cell, Column, Table } from '@blueprintjs/table';
 import useDB from './DBContext';
 
 const Tables = () => {
-  const { queryResult, queryError } = useDB();
+  const { queryResult } = useDB();
 
   const { values, columns } = useMemo(
     () => ({
@@ -26,7 +26,6 @@ const Tables = () => {
           />
         ))}
       </Table>
-      <div>{JSON.stringify(queryError)}</div>
     </div>
   );
 };
