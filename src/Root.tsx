@@ -6,11 +6,13 @@ import NavBar from './components/NavBar';
 import SQLEditor from './components/SQLEditor';
 import Tables from './components/Tables';
 import TablesDrawer from './components/TablesDrawer';
+import useDB from './components/DBContext';
 
 import './assets/root.css';
 
 const Root = () => {
   const [showTablesDrawer, setShowTablesDrawer] = useState(false);
+  const { tableNames } = useDB();
 
   return (
     <>
@@ -19,7 +21,7 @@ const Root = () => {
           onClick={() => setShowTablesDrawer(true)}
           className={Classes.MINIMAL}
           icon={<ThList />}
-          text="Tables"
+          text={`Tables${tableNames?.length ? ` (${tableNames.length})` : ''}`}
         />
       </NavBar>
       <SQLEditor />

@@ -90,7 +90,7 @@ const TablesDrawer = ({
               icon="add"
               intent={Intent.PRIMARY}
               style={{ margin: '16px' }}
-              text="NEW TABLE"
+              text="NEW TABLE FROM CSV"
               onClick={() => setShowAddNewTable(true)}
               large
             />
@@ -103,7 +103,7 @@ const TablesDrawer = ({
               <Button
                 icon="add"
                 intent={Intent.PRIMARY}
-                text="NEW TABLE"
+                text="NEW TABLE FROM CSV"
                 onClick={() => setShowAddNewTable(true)}
                 large
               />
