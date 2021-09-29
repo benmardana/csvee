@@ -12,6 +12,7 @@
   "dependencies": {
     "@blueprintjs/core": "^4.0.0-alpha.0",
     "@blueprintjs/table": "^4.0.0-alpha.0",
+    "@monaco-editor/react": "^4.2.2",
     "idb-keyval": "^6.0.2",
     "papaparse": "^5.3.1",
     "react": "^17.0.0",
