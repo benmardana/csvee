@@ -106,7 +106,7 @@ export const DBContextProvider = ({
         const result = db?.exec(sql);
         setQueryResult(result);
       } catch (err) {
-        console.log(err);
+        console.error(err);
         toaster.showToast({ message: err.message, intent: Intent.DANGER });
         setQueryResult([]);
       }
